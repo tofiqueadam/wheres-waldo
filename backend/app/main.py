@@ -1,5 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.database import Base, engine
+from app.routers import characters_router
+
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -12,16 +17,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# @app.get("/api/hello")
-# def hello():
-#     return {"message": "Hello from FastAPI!"}
+app.include_router(characters_router)
 
 
-@app.get("/api/characters")
-def get_characters():
-    return [
-        {"id": 1, "name": "Waldo"},
-        {"id": 2, "name": "Wizard"},
-        {"id": 3, "name": "Wilma"},
-    ]
+@app.get("/api/hello")
+def hello():
+    return {"message": "Hello from FastAPI!"}
