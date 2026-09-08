@@ -25,6 +25,8 @@ export default function GamePage() {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [foundCharacters, setFoundCharacters] = useState<number[]>([]);
   const [seconds, setSeconds] = useState(0);
+  const [playerName, setPlayerName] = useState("");
+  const [scoreSaved, setScoreSaved] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<ClickPosition | null>(
     null
   );
@@ -107,6 +109,23 @@ export default function GamePage() {
     }
   }
 
+  async function saveScore() {
+    if (!playerName.trim()) {
+      return;
+    }
+
+    await fetch("http://127.0.0.1:8000/api/scores/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        player_name: playerName.trim(),
+        time_seconds: seconds,
+      }),
+    });
+  }
+
   useEffect(() => {
     fetch("http://127.0.0.1:8000/api/characters/")
       .then((response) => response.json())
@@ -128,6 +147,28 @@ export default function GamePage() {
       clearInterval(interval);
     };
   }, [gameFinished]);
+
+  useEffect(() => {
+    if (!gameFinished || scoreSaved) {
+      return;
+    }
+
+    const name = window.prompt("You found everyone! Enter your name:");
+
+    if (name && name.trim()) {
+      setPlayerName(name);
+    }
+
+    setScoreSaved(true);
+  }, [gameFinished, scoreSaved]);
+
+  useEffect(() => {
+    if (!gameFinished || !playerName) {
+      return;
+    }
+
+    saveScore();
+  }, [gameFinished, playerName]);
 
   return (
     <main
