@@ -49,6 +49,10 @@ export default function GamePage() {
   const [foundCharacters, setFoundCharacters] = useState<number[]>([]);
   const [seconds, setSeconds] = useState(0);
   const [scores, setScores] = useState<Score[]>([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [savingScore, setSavingScore] = useState(false);
+  const [scoreSaved, setScoreSaved] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panPosition, setPanPosition] = useState<PanPosition>({ x: 0, y: 0 });
   const [gameStarted, setGameStarted] = useState(false);
@@ -194,6 +198,8 @@ export default function GamePage() {
     setZoomLevel(1);
     setPanPosition({ x: 0, y: 0 });
     setFeedback(null);
+    setError("");
+    setScoreSaved(false);
   }
 
   function handleImageClick(event: MouseEvent<HTMLImageElement>) {
@@ -227,6 +233,7 @@ export default function GamePage() {
     setSelectedPosition({ x, y });
     setMenuPosition({ x: visibleX, y: visibleY });
     setFeedback(null);
+    setError("");
   }
 
   async function handleCharacterSelection(character: Character) {
@@ -278,47 +285,92 @@ export default function GamePage() {
         message: "Could not check your guess. Try again.",
         correct: false,
       });
+      setError("Could not check your guess. Try again.");
     } finally {
       setSelectedPosition(null);
     }
   }
 
   async function saveScore() {
-    if (!playerName.trim()) {
+    if (!playerName.trim() || savingScore || scoreSaved) {
       return;
     }
 
-    await fetch("http://127.0.0.1:8000/api/scores/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        player_name: playerName.trim(),
-        time_seconds: seconds,
-      }),
-    });
+    setScoreSaved(true);
+    setSavingScore(true);
 
-    const response = await fetch("http://127.0.0.1:8000/api/scores/");
-    const data = await response.json();
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/scores/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          player_name: playerName.trim(),
+          time_seconds: seconds,
+        }),
+      });
 
-    setScores(data);
+      if (!response.ok) {
+        throw new Error("Failed to save score");
+      }
+
+      const scoresResponse = await fetch("http://127.0.0.1:8000/api/scores/");
+
+      if (!scoresResponse.ok) {
+        throw new Error("Failed to load scores");
+      }
+
+      const data = await scoresResponse.json();
+
+      setScores(data);
+    } catch {
+      setError("Your score could not be saved.");
+    } finally {
+      setSavingScore(false);
+    }
   }
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/characters/")
-      .then((response) => response.json())
-      .then((data) => {
+    async function loadCharacters() {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/characters/");
+
+        if (!response.ok) {
+          throw new Error("Failed to load characters");
+        }
+
+        const data = await response.json();
+
         setCharacters(data);
-      });
+      } catch {
+        setError("Could not connect to the game server.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadCharacters();
   }, []);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/scores/")
-      .then((response) => response.json())
-      .then((data) => {
+    async function loadScores() {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/scores/");
+
+        if (!response.ok) {
+          throw new Error("Failed to load scores");
+        }
+
+        const data = await response.json();
+
         setScores(data);
-      });
+      } catch {
+        setError("Could not load the leaderboard.");
+      }
+    }
+
+    loadScores();
   }, []);
 
   useEffect(() => {
@@ -346,6 +398,17 @@ export default function GamePage() {
 
     saveScore();
   }, [gameFinished, playerName]);
+
+  if (loading) {
+    return (
+      <main className={styles.loadingPage}>
+        <p className={styles.startEyebrow}>Field search / 01</p>
+        <h1 className={styles.loadingTitle}>Where&apos;s Waldo?</h1>
+        <p className={styles.loadingCopy}>Loading the search area...</p>
+        <div className={styles.loadingBar} aria-hidden="true" />
+      </main>
+    );
+  }
 
   if (!gameStarted) {
     return (
@@ -385,6 +448,7 @@ export default function GamePage() {
             Start game <span aria-hidden="true">-&gt;</span>
           </button>
           <p className={styles.startNote}>The clock starts when you enter.</p>
+          {error && <p className={styles.error}>{error}</p>}
         </section>
       </main>
     );
@@ -544,6 +608,7 @@ export default function GamePage() {
           <p className={styles.panelCopy}>
             Click the picture, then choose the name that matches your find.
           </p>
+          {error && <p className={styles.error}>{error}</p>}
 
           <div className={styles.result}>
             <p className={styles.resultLabel}>Latest result</p>
@@ -562,6 +627,9 @@ export default function GamePage() {
               <div className={styles.completion}>
                 <p>You found everyone!</p>
                 <p>Your time: {seconds} seconds</p>
+                {savingScore && (
+                  <p className={styles.savingMessage}>Saving your score...</p>
+                )}
                 <button
                   type="button"
                   className={styles.playAgainButton}
