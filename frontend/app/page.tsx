@@ -9,26 +9,12 @@ type Character = {
 
 export default function Home() {
   const [characters, setCharacters] = useState<Character[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/characters")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch from backend");
-        }
-
-        return response.json();
-      })
+    fetch("http://127.0.0.1:8000/api/characters/")
+      .then((response) => response.json())
       .then((data) => {
         setCharacters(data);
-      })
-      .catch((error) => {
-        setError(error.message);
-      })
-      .finally(() => {
-        setLoading(false);
       });
   }, []);
 
@@ -36,21 +22,15 @@ export default function Home() {
     <main>
       <h1>Where&apos;s Waldo?</h1>
 
-      {loading && <p>Loading...</p>}
+      <h2>Found {characters.length} characters</h2>
 
-      {error && <p>Error: {error}</p>}
-
-      {!loading && !error && (
-        <>
-          <h2>Characters:</h2>
-          <ul>
-            {characters.map((character) => (
-              <li key={character.id}>{character.name}</li>
-            ))}
-          </ul>
-          <h2>Character Count: {characters.length} </h2>
-        </>
-      )}
+      <ul>
+        {characters.map((character) => (
+          <li key={character.id}>
+            {character.name}
+          </li>
+        ))}
+      </ul>
     </main>
   );
 }

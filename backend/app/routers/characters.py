@@ -40,14 +40,42 @@ def create_character(
     db: Session = Depends(get_db),
 ):
     new_character = Character(
-        name=character.name
-    )
+    name=character.name,
+    x=character.x,
+    y=character.y,
+    width=character.width,
+    height=character.height,
+)
 
     db.add(new_character)
     db.commit()
     db.refresh(new_character)
 
     return new_character
+
+
+@router.delete("/{character_id}")
+def delete_character(
+    character_id: int,
+    db: Session = Depends(get_db),
+):
+    statement = select(Character).where(
+        Character.id == character_id
+    )
+
+    character = db.scalars(statement).first()
+
+    if character is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Character not found",
+        )
+
+    db.delete(character)
+    db.commit()
+
+    return {"message": "Character deleted"}
+
 
 @router.get(
     "/{character_id}",
