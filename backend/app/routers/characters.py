@@ -45,6 +45,7 @@ def create_character(
     y=character.y,
     width=character.width,
     height=character.height,
+    image_id=character.image_id,
 )
 
     db.add(new_character)

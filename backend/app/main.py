@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import Base, engine
 from app.routers import characters_router
-
+from app.models.image import Image
 
 Base.metadata.create_all(bind=engine)
 

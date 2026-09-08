@@ -1,4 +1,4 @@
-from sqlalchemy import Float, String
+from sqlalchemy import Float, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -31,5 +31,10 @@ class Character(Base):
 
     height: Mapped[float] = mapped_column(
         Float,
+        nullable=False
+    )
+
+    image_id: Mapped[int] = mapped_column(
+        ForeignKey("images.id"),
         nullable=False
     )

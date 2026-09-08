@@ -7,6 +7,7 @@ class CharacterCreate(BaseModel):
     y: float
     width: float
     height: float
+    image_id: int
 
 
 class CharacterResponse(BaseModel):
@@ -16,3 +17,4 @@ class CharacterResponse(BaseModel):
     y: float
     width: float
     height: float
+    image_id: int
