@@ -513,6 +513,55 @@
     url("/images/waldo-city.jpg") center / cover;
 }
 
+.loadingPage {
+  display: grid;
+  min-height: 100vh;
+  place-content: center;
+  padding: 24px;
+  color: var(--paper);
+  background: var(--ink);
+  text-align: center;
+}
+
+.loadingTitle {
+  margin: 0;
+  font-size: clamp(2.5rem, 8vw, 6rem);
+  letter-spacing: 0;
+  line-height: 0.9;
+}
+
+.loadingCopy {
+  margin: 20px 0 0;
+  color: var(--muted);
+}
+
+.loadingBar {
+  width: min(280px, 70vw);
+  height: 4px;
+  margin: 24px auto 0;
+  overflow: hidden;
+  background: #4b514c;
+}
+
+.loadingBar::after {
+  display: block;
+  width: 45%;
+  height: 100%;
+  content: "";
+  background: var(--signal);
+  animation: loadingSlide 1.1s ease-in-out infinite alternate;
+}
+
+@keyframes loadingSlide {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(220%);
+  }
+}
+
 .startBackdrop {
   position: absolute;
   inset: 0;
@@ -625,6 +674,27 @@
   margin: 16px 0 0;
   color: #aaa99e;
   font-size: 0.74rem;
+}
+
+.error {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  border-left: 4px solid #ff9b8f;
+  color: #ffe5e1;
+  background: rgba(191, 63, 53, 0.24);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.panel .error {
+  margin-top: 20px;
+}
+
+.savingMessage {
+  color: var(--muted) !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
 }
 
 @media (max-width: 900px) {
