@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
+import styles from "./page.module.css";
 
 const IMAGE_WIDTH = 1200;
 const IMAGE_HEIGHT = 800;
@@ -32,12 +33,14 @@ export default function GamePage() {
   const [foundCharacters, setFoundCharacters] = useState<number[]>([]);
   const [seconds, setSeconds] = useState(0);
   const [scores, setScores] = useState<Score[]>([]);
+  const [zoomLevel, setZoomLevel] = useState(1);
   const [playerName, setPlayerName] = useState("");
   const [scoreSaved, setScoreSaved] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<ClickPosition | null>(
     null
   );
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+  const viewportRef = useRef<HTMLDivElement>(null);
   const [feedback, setFeedback] = useState<{
     message: string;
     correct: boolean;
@@ -45,11 +48,28 @@ export default function GamePage() {
   const gameFinished =
     characters.length > 0 && foundCharacters.length === characters.length;
 
-  function handleImageClick(event: MouseEvent<HTMLImageElement>) {
-    const rect = event.currentTarget.getBoundingClientRect();
+  function changeZoom(delta: number) {
+    setZoomLevel((current) =>
+      Math.min(2.5, Math.max(1, Number((current + delta).toFixed(1))))
+    );
+  }
 
-    const displayX = event.clientX - rect.left;
-    const displayY = event.clientY - rect.top;
+  function handleImageClick(event: MouseEvent<HTMLImageElement>) {
+    const viewport = viewportRef.current;
+
+    if (!viewport) {
+      return;
+    }
+
+    const rect = viewport.getBoundingClientRect();
+
+    const visibleX = event.clientX - rect.left;
+    const visibleY = event.clientY - rect.top;
+    const imageOffsetX = (rect.width * (1 - zoomLevel)) / 2;
+    const imageOffsetY = (rect.height * (1 - zoomLevel)) / 2;
+
+    const displayX = (visibleX - imageOffsetX) / zoomLevel;
+    const displayY = (visibleY - imageOffsetY) / zoomLevel;
 
     const scaleX = IMAGE_WIDTH / rect.width;
     const scaleY = IMAGE_HEIGHT / rect.height;
@@ -58,7 +78,7 @@ export default function GamePage() {
     const y = displayY * scaleY;
 
     setSelectedPosition({ x, y });
-    setMenuPosition({ x: displayX, y: displayY });
+    setMenuPosition({ x: visibleX, y: visibleY });
     setFeedback(null);
   }
 
@@ -191,407 +211,191 @@ export default function GamePage() {
   }, [gameFinished, playerName]);
 
   return (
-    <main
-      style={{
-        height: "100vh",
-        background: "#f4efe5",
-        color: "#202522",
-        overflow: "hidden",
-        padding: "clamp(14px, 2.5vw, 32px)",
-      }}
-    >
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 2fr) minmax(260px, 1fr)",
-          gap: "clamp(16px, 2.5vw, 36px)",
-          height: "100%",
-          margin: "0 auto",
-          maxWidth: "1600px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            minWidth: 0,
-          }}
-        >
-          <header
-            style={{
-              alignItems: "end",
-              display: "flex",
-              gap: "20px",
-              justifyContent: "space-between",
-              marginBottom: "clamp(12px, 2vh, 22px)",
-            }}
-          >
+    <main className={styles.gamePage}>
+      <section className={styles.shell}>
+        <div className={styles.stageColumn}>
+          <header className={styles.header}>
             <div>
-            <p
-              style={{
-                color: "#bf3f35",
-                fontSize: "0.72rem",
-                fontWeight: 800,
-                letterSpacing: "0.16em",
-                margin: "0 0 8px",
-                textTransform: "uppercase",
-              }}
-            >
-              Field search / 01
-            </p>
-            <h1
-              style={{
-                fontSize: "clamp(2rem, 5vw, 4.25rem)",
-                letterSpacing: "0",
-                lineHeight: 0.95,
-                margin: 0,
-              }}
-            >
-              Where&apos;s Waldo?
-            </h1>
-            <p
-              style={{
-                color: "#5d645f",
-                fontSize: "0.86rem",
-                fontWeight: 700,
-                margin: "10px 0 0",
-              }}
-            >
-              Found {foundCharacters.length} / {characters.length}
-            </p>
-            <p
-              style={{
-                color: "#5d645f",
-                fontSize: "0.86rem",
-                fontWeight: 700,
-                margin: "4px 0 0",
-              }}
-            >
-              Time: {seconds}s
-            </p>
+              <p className={styles.eyebrow}>Field search / 01</p>
+              <h1 className={styles.title}>Where&apos;s Waldo?</h1>
+              <div className={styles.statStrip}>
+                <span className={styles.stat}>
+                  <span className={styles.statLabel}>Found</span>
+                  <span className={styles.statValue}>
+                    {foundCharacters.length}/{characters.length}
+                  </span>
+                </span>
+                <span className={styles.stat}>
+                  <span className={styles.statLabel}>Time</span>
+                  <span className={styles.statValue}>{seconds}s</span>
+                </span>
+              </div>
             </div>
-            <p
-              style={{
-                background: "#202522",
-                color: "#f4efe5",
-                fontSize: "0.72rem",
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                margin: 0,
-                padding: "9px 12px",
-                textTransform: "uppercase",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {characters.length} targets
-            </p>
+            <p className={styles.targetCount}>{characters.length} targets</p>
           </header>
 
-          <div
-            style={{
-              alignItems: "center",
-              background: "#202522",
-              border: "1px solid #202522",
-              boxShadow: "12px 12px 0 #d7cdbd",
-              display: "flex",
-              flex: 1,
-              minHeight: 0,
-              padding: "clamp(8px, 1.5vw, 16px)",
-            }}
-          >
+          <div className={styles.imageFrame}>
             <div
-              style={{
-              position: "relative",
-              aspectRatio: "3 / 2",
-              width: "100%",
-              margin: "0 auto",
-              overflow: "hidden",
-              }}
+              ref={viewportRef}
+              className={`${styles.imageViewport} ${
+                zoomLevel > 1 ? styles.imageViewportZoomed : ""
+              }`}
             >
-            <img
-              src="/images/waldo-city.jpg"
-              alt="Where's Waldo game"
-              style={{
-                width: "100%",
-                display: "block",
-                cursor: "crosshair",
-              }}
-              onClick={handleImageClick}
-            />
-
-            {selectedPosition && (
-              <div
+              <div className={styles.toolbar}>
+                <button
+                  type="button"
+                  className={styles.toolButton}
+                  onClick={() => changeZoom(-0.5)}
+                  disabled={zoomLevel === 1}
+                  aria-label="Zoom out"
+                >
+                  -
+                </button>
+                <span className={styles.zoomReadout}>
+                  {Math.round(zoomLevel * 100)}%
+                </span>
+                <button
+                  type="button"
+                  className={styles.toolButton}
+                  onClick={() => changeZoom(0.5)}
+                  disabled={zoomLevel === 2.5}
+                  aria-label="Zoom in"
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  className={styles.toolButton}
+                  onClick={() => setZoomLevel(1)}
+                  disabled={zoomLevel === 1}
+                >
+                  Reset
+                </button>
+              </div>
+              <img
+                src="/images/waldo-city.jpg"
+                alt="Where's Waldo game"
+                className={styles.image}
                 style={{
-                  position: "absolute",
-                  left: `${menuPosition.x}px`,
-                  top: `${menuPosition.y}px`,
-                  transform: "translate(-50%, 18px)",
-                  width: "min(220px, calc(100% - 24px))",
-                  background: "#fffaf0",
-                  border: "2px solid #202522",
-                  boxShadow: "6px 6px 0 rgba(32, 37, 34, 0.7)",
-                  padding: "14px",
-                  zIndex: 3,
+                  transform: `scale(${zoomLevel})`,
+                  transformOrigin: "center",
                 }}
-              >
-                <p
+                onClick={handleImageClick}
+              />
+
+              {selectedPosition && (
+                <div
+                  className={styles.clickMarker}
                   style={{
-                    color: "#bf3f35",
-                    fontSize: "0.68rem",
-                    fontWeight: 800,
-                    letterSpacing: "0.14em",
-                    margin: "0 0 10px",
-                    textTransform: "uppercase",
+                    left: `${menuPosition.x}px`,
+                    top: `${menuPosition.y}px`,
+                  }}
+                  aria-hidden="true"
+                />
+              )}
+
+              {selectedPosition && (
+                <div
+                  className={styles.selectionMenu}
+                  style={{
+                    left: `${menuPosition.x}px`,
+                    top: `${menuPosition.y}px`,
                   }}
                 >
-                  Identify the target
-                </p>
-                {characters
-                  .filter((character) => !foundCharacters.includes(character.id))
-                  .map((character) => (
-                  <button
-                    key={character.id}
-                    type="button"
-                    onClick={() => handleCharacterSelection(character)}
-                    style={{
-                      alignItems: "center",
-                      background: "#202522",
-                      border: "0",
-                      color: "#fffaf0",
-                      cursor: "pointer",
-                      display: "flex",
-                      fontSize: "0.9rem",
-                      fontWeight: 700,
-                      justifyContent: "space-between",
-                      marginTop: "6px",
-                      padding: "11px 12px",
-                      textAlign: "left",
-                      width: "100%",
-                    }}
-                  >
-                    {character.name}
-                    <span aria-hidden="true">-&gt;</span>
-                  </button>
-                  ))}
-                {characters.every((character) =>
-                  foundCharacters.includes(character.id)
-                ) && (
-                  <p
-                    style={{
-                      color: "#5d645f",
-                      fontSize: "0.8rem",
-                      margin: "10px 0 0",
-                    }}
-                  >
-                    Everyone found.
-                  </p>
-                )}
-              </div>
-            )}
+                  <p className={styles.selectionLabel}>Identify the target</p>
+                  {characters
+                    .filter(
+                      (character) =>
+                        !foundCharacters.includes(character.id)
+                    )
+                    .map((character) => (
+                      <button
+                        key={character.id}
+                        type="button"
+                        className={styles.characterButton}
+                        onClick={() => handleCharacterSelection(character)}
+                      >
+                        {character.name}
+                        <span aria-hidden="true">-&gt;</span>
+                      </button>
+                    ))}
+                  {characters.every((character) =>
+                    foundCharacters.includes(character.id)
+                  ) && <p className={styles.emptyMenu}>Everyone found.</p>}
+                </div>
+              )}
 
-            {characters
-              .filter(
-                (character) =>
-                  SHOW_DEBUG_BOXES || foundCharacters.includes(character.id)
-              )
-              .map((character) => (
-              <div
-                key={character.id}
-                style={{
-                  position: "absolute",
-                  left: `${(character.x / IMAGE_WIDTH) * 100}%`,
-                  top: `${(character.y / IMAGE_HEIGHT) * 100}%`,
-                  width: `${(character.width / IMAGE_WIDTH) * 100}%`,
-                  height: `${(character.height / IMAGE_HEIGHT) * 100}%`,
-                  background: "rgba(191, 63, 53, 0.12)",
-                  border: "2px solid #e85145",
-                  boxSizing: "border-box",
-                  pointerEvents: "none",
-                }}
-              />
-              ))}
+              {characters
+                .filter(
+                  (character) =>
+                    SHOW_DEBUG_BOXES || foundCharacters.includes(character.id)
+                )
+                .map((character) => (
+                  <div
+                    key={character.id}
+                    className={styles.debugBox}
+                    style={{
+                      left: `${(character.x / IMAGE_WIDTH) * 100}%`,
+                      top: `${(character.y / IMAGE_HEIGHT) * 100}%`,
+                      width: `${(character.width / IMAGE_WIDTH) * 100}%`,
+                      height: `${(character.height / IMAGE_HEIGHT) * 100}%`,
+                    }}
+                  />
+                ))}
             </div>
           </div>
         </div>
 
-        <aside
-          style={{
-            background: "#202522",
-            boxShadow: "12px 12px 0 #d7cdbd",
-            color: "#fffaf0",
-            display: "flex",
-            flexDirection: "column",
-            minWidth: 0,
-            overflowY: "auto",
-            padding: "clamp(20px, 3vw, 42px)",
-          }}
-        >
-          <p
-            style={{
-              color: "#e85145",
-              fontSize: "0.72rem",
-              fontWeight: 800,
-              letterSpacing: "0.16em",
-              margin: 0,
-              textTransform: "uppercase",
-            }}
-          >
-            Mission status
-          </p>
-          <h2
-            style={{
-              fontSize: "clamp(1.8rem, 3vw, 3rem)",
-              letterSpacing: "0",
-              lineHeight: 1,
-              margin: "12px 0 14px",
-            }}
-          >
-            Find the hidden crew.
-          </h2>
-          <p
-            style={{
-              color: "#c8c5b9",
-              fontSize: "0.95rem",
-              lineHeight: 1.55,
-              margin: 0,
-              maxWidth: "32ch",
-            }}
-          >
+        <aside className={styles.panel}>
+          <p className={styles.panelEyebrow}>Mission status</p>
+          <h2 className={styles.panelTitle}>Find the hidden crew.</h2>
+          <p className={styles.panelCopy}>
             Click the picture, then choose the name that matches your find.
           </p>
 
-          <div
-            style={{
-              borderBottom: "1px solid #4b514c",
-              borderTop: "1px solid #4b514c",
-              margin: "clamp(24px, 5vh, 56px) 0 0",
-              padding: "18px 0",
-            }}
-          >
+          <div className={styles.result}>
+            <p className={styles.resultLabel}>Latest result</p>
             <p
-              style={{
-                color: "#c8c5b9",
-                fontSize: "0.68rem",
-                fontWeight: 800,
-                letterSpacing: "0.14em",
-                margin: "0 0 10px",
-                textTransform: "uppercase",
-              }}
-            >
-              Latest result
-            </p>
-            <p
-              style={{
-                color: feedback
+              className={`${styles.resultText} ${
+                feedback
                   ? feedback.correct
-                    ? "#91d5a6"
-                    : "#ff9b8f"
-                  : "#fffaf0",
-                fontSize: "clamp(1.2rem, 2vw, 1.8rem)",
-                fontWeight: 800,
-                lineHeight: 1.15,
-                margin: 0,
-              }}
+                    ? styles.resultSuccess
+                    : styles.resultFailure
+                  : ""
+              }`}
             >
               {feedback?.message ?? "Waiting for your first find."}
             </p>
             {gameFinished && (
-              <p
-                style={{
-                  color: "#91d5a6",
-                  fontSize: "1rem",
-                  fontWeight: 800,
-                  margin: "14px 0 0",
-                }}
-              >
-                You found everyone!
-              </p>
+              <p className={styles.completion}>You found everyone!</p>
             )}
           </div>
 
-          <div style={{ marginTop: "auto" }}>
-            <p
-              style={{
-                color: "#c8c5b9",
-                fontSize: "0.68rem",
-                fontWeight: 800,
-                letterSpacing: "0.14em",
-                margin: "0 0 12px",
-                textTransform: "uppercase",
-              }}
-            >
-              Targets in this frame
-            </p>
-            <div style={{ display: "grid", gap: "8px" }}>
+          <div className={styles.roster}>
+            <p className={styles.rosterLabel}>Targets in this frame</p>
+            <div className={styles.rosterList}>
               {characters.map((character, index) => (
-                <div
-                  key={character.id}
-                  style={{
-                    alignItems: "center",
-                    borderBottom: "1px solid #4b514c",
-                    display: "flex",
-                    gap: "10px",
-                    padding: "8px 0",
-                  }}
-                >
-                  <span style={{ color: "#e85145", fontWeight: 800 }}>
-                    0{index + 1}
-                  </span>
-                  <span style={{ fontWeight: 700 }}>{character.name}</span>
+                <div key={character.id} className={styles.rosterItem}>
+                  <span className={styles.rosterIndex}>0{index + 1}</span>
+                  <span>{character.name}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <section
-            style={{
-              borderTop: "1px solid #4b514c",
-              marginTop: "clamp(20px, 3vh, 32px)",
-              paddingTop: "18px",
-            }}
-          >
-            <p
-              style={{
-                color: "#e85145",
-                fontSize: "0.72rem",
-                fontWeight: 800,
-                letterSpacing: "0.14em",
-                margin: "0 0 12px",
-                textTransform: "uppercase",
-              }}
-            >
-              Leaderboard
-            </p>
+          <section className={styles.leaderboard}>
+            <p className={styles.leaderboardLabel}>Leaderboard</p>
             {scores.length === 0 ? (
-              <p
-                style={{
-                  color: "#c8c5b9",
-                  fontSize: "0.82rem",
-                  margin: 0,
-                }}
-              >
-                No completed runs yet.
-              </p>
+              <p className={styles.panelCopy}>No completed runs yet.</p>
             ) : (
-              <div style={{ display: "grid", gap: "8px" }}>
+              <div className={styles.leaderboardList}>
                 {scores.map((score, index) => (
-                  <div
-                    key={score.id}
-                    style={{
-                      alignItems: "center",
-                      display: "flex",
-                      fontSize: "0.85rem",
-                      gap: "10px",
-                      justifyContent: "space-between",
-                    }}
-                  >
+                  <div key={score.id} className={styles.scoreItem}>
                     <span>
-                      <strong style={{ color: "#e85145" }}>
-                        {index + 1}.
-                      </strong>{" "}
+                      <strong className={styles.scoreRank}>{index + 1}.</strong>{" "}
                       {score.player_name}
                     </span>
-                    <span style={{ color: "#c8c5b9", whiteSpace: "nowrap" }}>
+                    <span className={styles.scoreTime}>
                       {score.time_seconds}s
                     </span>
                   </div>
