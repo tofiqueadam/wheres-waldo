@@ -400,18 +400,6 @@ export default function GamePage() {
             )}
           </div>
 
-          <div className={styles.roster}>
-            <p className={styles.rosterLabel}>Targets in this frame</p>
-            <div className={styles.rosterList}>
-              {characters.map((character, index) => (
-                <div key={character.id} className={styles.rosterItem}>
-                  <span className={styles.rosterIndex}>0{index + 1}</span>
-                  <span>{character.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
           <section className={styles.leaderboard}>
             <p className={styles.leaderboardLabel}>Leaderboard</p>
             {scores.length === 0 ? (

@@ -229,7 +229,6 @@
 }
 
 .resultLabel,
-.rosterLabel,
 .leaderboardLabel {
   margin: 0 0 10px;
   color: var(--muted);
@@ -262,17 +261,11 @@
   font-weight: 800;
 }
 
-.roster {
-  margin-top: auto;
-}
-
-.rosterList,
 .leaderboardList {
   display: grid;
   gap: 8px;
 }
 
-.rosterItem,
 .scoreItem {
   display: flex;
   align-items: center;
@@ -283,7 +276,6 @@
   font-size: 0.85rem;
 }
 
-.rosterIndex,
 .scoreRank {
   color: var(--signal);
   font-weight: 800;
