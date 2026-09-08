@@ -22,6 +22,7 @@ type ClickPosition = {
 
 export default function GamePage() {
   const [characters, setCharacters] = useState<Character[]>([]);
+  const [foundCharacters, setFoundCharacters] = useState<number[]>([]);
   const [selectedPosition, setSelectedPosition] = useState<ClickPosition | null>(
     null
   );
@@ -30,6 +31,8 @@ export default function GamePage() {
     message: string;
     correct: boolean;
   } | null>(null);
+  const gameFinished =
+    characters.length > 0 && foundCharacters.length === characters.length;
 
   function handleImageClick(event: MouseEvent<HTMLImageElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -50,6 +53,11 @@ export default function GamePage() {
 
   async function handleCharacterSelection(character: Character) {
     if (!selectedPosition) {
+      return;
+    }
+
+    if (foundCharacters.includes(character.id)) {
+      setSelectedPosition(null);
       return;
     }
 
@@ -74,6 +82,9 @@ export default function GamePage() {
         await response.json();
 
       if (result.correct) {
+        setFoundCharacters((current) =>
+          current.includes(character.id) ? current : [...current, character.id]
+        );
         setFeedback({
           message: `Correct! You found ${result.character ?? character.name}`,
           correct: true,
@@ -161,6 +172,16 @@ export default function GamePage() {
             >
               Where&apos;s Waldo?
             </h1>
+            <p
+              style={{
+                color: "#5d645f",
+                fontSize: "0.86rem",
+                fontWeight: 700,
+                margin: "10px 0 0",
+              }}
+            >
+              Found {foundCharacters.length} / {characters.length}
+            </p>
             </div>
             <p
               style={{
@@ -238,7 +259,9 @@ export default function GamePage() {
                 >
                   Identify the target
                 </p>
-                {characters.map((character) => (
+                {characters
+                  .filter((character) => !foundCharacters.includes(character.id))
+                  .map((character) => (
                   <button
                     key={character.id}
                     type="button"
@@ -262,11 +285,26 @@ export default function GamePage() {
                     {character.name}
                     <span aria-hidden="true">-&gt;</span>
                   </button>
-                ))}
+                  ))}
+                {characters.every((character) =>
+                  foundCharacters.includes(character.id)
+                ) && (
+                  <p
+                    style={{
+                      color: "#5d645f",
+                      fontSize: "0.8rem",
+                      margin: "10px 0 0",
+                    }}
+                  >
+                    Everyone found.
+                  </p>
+                )}
               </div>
             )}
 
-            {characters.map((character) => (
+            {characters
+              .filter((character) => foundCharacters.includes(character.id))
+              .map((character) => (
               <div
                 key={character.id}
                 style={{
@@ -281,7 +319,7 @@ export default function GamePage() {
                   pointerEvents: "none",
                 }}
               />
-            ))}
+              ))}
             </div>
           </div>
         </div>
@@ -366,6 +404,18 @@ export default function GamePage() {
             >
               {feedback?.message ?? "Waiting for your first find."}
             </p>
+            {gameFinished && (
+              <p
+                style={{
+                  color: "#91d5a6",
+                  fontSize: "1rem",
+                  fontWeight: 800,
+                  margin: "14px 0 0",
+                }}
+              >
+                You found everyone!
+              </p>
+            )}
           </div>
 
           <div style={{ marginTop: "auto" }}>
