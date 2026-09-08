@@ -125,6 +125,7 @@
   overflow: hidden;
   aspect-ratio: 3 / 2;
   background: #151816;
+  touch-action: none;
 }
 
 .imageViewportZoomed {
@@ -144,6 +145,12 @@
   user-select: none;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+}
+
+.imageLayer {
+  position: absolute;
+  inset: 0;
+  transform-origin: center;
   transition: transform 180ms ease-out;
   will-change: transform;
 }

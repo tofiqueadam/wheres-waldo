@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+  type PointerEvent,
+} from "react";
 import styles from "./page.module.css";
 
 const IMAGE_WIDTH = 1200;
@@ -28,12 +34,23 @@ type ClickPosition = {
   y: number;
 };
 
+type PanPosition = {
+  x: number;
+  y: number;
+};
+
+type PointerPosition = {
+  x: number;
+  y: number;
+};
+
 export default function GamePage() {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [foundCharacters, setFoundCharacters] = useState<number[]>([]);
   const [seconds, setSeconds] = useState(0);
   const [scores, setScores] = useState<Score[]>([]);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [panPosition, setPanPosition] = useState<PanPosition>({ x: 0, y: 0 });
   const [gameStarted, setGameStarted] = useState(false);
   const [playerName, setPlayerName] = useState("");
   const [selectedPosition, setSelectedPosition] = useState<ClickPosition | null>(
@@ -41,6 +58,14 @@ export default function GamePage() {
   );
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const viewportRef = useRef<HTMLDivElement>(null);
+  const pointersRef = useRef(new Map<number, PointerPosition>());
+  const dragStartRef = useRef<
+    { x: number; y: number; pan: PanPosition } | null
+  >(null);
+  const pinchStartRef = useRef<
+    { distance: number; zoom: number } | null
+  >(null);
+  const suppressClickRef = useRef(false);
   const [feedback, setFeedback] = useState<{
     message: string;
     correct: boolean;
@@ -54,6 +79,112 @@ export default function GamePage() {
     );
   }
 
+  function constrainPan(next: PanPosition, zoom = zoomLevel) {
+    const viewport = viewportRef.current;
+
+    if (!viewport) {
+      return next;
+    }
+
+    const rect = viewport.getBoundingClientRect();
+    const maxX = (rect.width * (zoom - 1)) / 2;
+    const maxY = (rect.height * (zoom - 1)) / 2;
+
+    return {
+      x: Math.max(-maxX, Math.min(maxX, next.x)),
+      y: Math.max(-maxY, Math.min(maxY, next.y)),
+    };
+  }
+
+  function getPointerDistance() {
+    const [first, second] = [...pointersRef.current.values()];
+
+    if (!first || !second) {
+      return 0;
+    }
+
+    return Math.hypot(second.x - first.x, second.y - first.y);
+  }
+
+  function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (zoomLevel === 1) {
+      return;
+    }
+
+    event.currentTarget.setPointerCapture(event.pointerId);
+    pointersRef.current.set(event.pointerId, {
+      x: event.clientX,
+      y: event.clientY,
+    });
+
+    if (pointersRef.current.size === 1) {
+      dragStartRef.current = {
+        x: event.clientX,
+        y: event.clientY,
+        pan: panPosition,
+      };
+    } else if (pointersRef.current.size === 2) {
+      pinchStartRef.current = {
+        distance: getPointerDistance(),
+        zoom: zoomLevel,
+      };
+      dragStartRef.current = null;
+    }
+  }
+
+  function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
+    if (!pointersRef.current.has(event.pointerId)) {
+      return;
+    }
+
+    pointersRef.current.set(event.pointerId, {
+      x: event.clientX,
+      y: event.clientY,
+    });
+
+    if (pointersRef.current.size >= 2 && pinchStartRef.current) {
+      const distance = getPointerDistance();
+      const nextZoom = Math.min(
+        2.5,
+        Math.max(1, pinchStartRef.current.zoom * (distance / pinchStartRef.current.distance))
+      );
+
+      setZoomLevel(Number(nextZoom.toFixed(2)));
+      setPanPosition((current) => constrainPan(current, nextZoom));
+      suppressClickRef.current = true;
+      return;
+    }
+
+    if (pointersRef.current.size === 1 && dragStartRef.current) {
+      const deltaX = event.clientX - dragStartRef.current.x;
+      const deltaY = event.clientY - dragStartRef.current.y;
+
+      if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+        suppressClickRef.current = true;
+      }
+
+      setPanPosition(
+        constrainPan({
+          x: dragStartRef.current.pan.x + deltaX,
+          y: dragStartRef.current.pan.y + deltaY,
+        })
+      );
+    }
+  }
+
+  function handlePointerUp(event: PointerEvent<HTMLDivElement>) {
+    pointersRef.current.delete(event.pointerId);
+    event.currentTarget.releasePointerCapture(event.pointerId);
+
+    if (pointersRef.current.size < 2) {
+      pinchStartRef.current = null;
+    }
+
+    if (pointersRef.current.size === 0) {
+      dragStartRef.current = null;
+    }
+  }
+
   function resetGame() {
     setGameStarted(false);
     setSeconds(0);
@@ -61,10 +192,16 @@ export default function GamePage() {
     setSelectedPosition(null);
     setMenuPosition({ x: 0, y: 0 });
     setZoomLevel(1);
+    setPanPosition({ x: 0, y: 0 });
     setFeedback(null);
   }
 
   function handleImageClick(event: MouseEvent<HTMLImageElement>) {
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
+
     const viewport = viewportRef.current;
 
     if (!viewport) {
@@ -75,8 +212,8 @@ export default function GamePage() {
 
     const visibleX = event.clientX - rect.left;
     const visibleY = event.clientY - rect.top;
-    const imageOffsetX = (rect.width * (1 - zoomLevel)) / 2;
-    const imageOffsetY = (rect.height * (1 - zoomLevel)) / 2;
+    const imageOffsetX = (rect.width * (1 - zoomLevel)) / 2 + panPosition.x;
+    const imageOffsetY = (rect.height * (1 - zoomLevel)) / 2 + panPosition.y;
 
     const displayX = (visibleX - imageOffsetX) / zoomLevel;
     const displayY = (visibleY - imageOffsetY) / zoomLevel;
@@ -199,6 +336,10 @@ export default function GamePage() {
   }, [gameStarted, gameFinished]);
 
   useEffect(() => {
+    setPanPosition((current) => constrainPan(current, zoomLevel));
+  }, [zoomLevel]);
+
+  useEffect(() => {
     if (!gameFinished || !playerName) {
       return;
     }
@@ -279,8 +420,15 @@ export default function GamePage() {
               className={`${styles.imageViewport} ${
                 zoomLevel > 1 ? styles.imageViewportZoomed : ""
               }`}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
             >
-              <div className={styles.toolbar}>
+              <div
+                className={styles.toolbar}
+                onPointerDown={(event) => event.stopPropagation()}
+              >
                 <button
                   type="button"
                   className={styles.toolButton}
@@ -311,16 +459,37 @@ export default function GamePage() {
                   Reset
                 </button>
               </div>
-              <img
-                src="/images/waldo-city.jpg"
-                alt="Where's Waldo game"
-                className={styles.image}
+              <div
+                className={styles.imageLayer}
                 style={{
-                  transform: `scale(${zoomLevel})`,
-                  transformOrigin: "center",
+                  transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel})`,
                 }}
-                onClick={handleImageClick}
-              />
+              >
+                <img
+                  src="/images/waldo-city.jpg"
+                  alt="Where's Waldo game"
+                  className={styles.image}
+                  onClick={handleImageClick}
+                />
+
+                {characters
+                  .filter(
+                    (character) =>
+                      SHOW_DEBUG_BOXES || foundCharacters.includes(character.id)
+                  )
+                  .map((character) => (
+                    <div
+                      key={character.id}
+                      className={styles.debugBox}
+                      style={{
+                        left: `${(character.x / IMAGE_WIDTH) * 100}%`,
+                        top: `${(character.y / IMAGE_HEIGHT) * 100}%`,
+                        width: `${(character.width / IMAGE_WIDTH) * 100}%`,
+                        height: `${(character.height / IMAGE_HEIGHT) * 100}%`,
+                      }}
+                    />
+                  ))}
+              </div>
 
               {selectedPosition && (
                 <div
@@ -336,6 +505,7 @@ export default function GamePage() {
               {selectedPosition && (
                 <div
                   className={styles.selectionMenu}
+                  onPointerDown={(event) => event.stopPropagation()}
                   style={{
                     left: `${menuPosition.x}px`,
                     top: `${menuPosition.y}px`,
@@ -364,23 +534,6 @@ export default function GamePage() {
                 </div>
               )}
 
-              {characters
-                .filter(
-                  (character) =>
-                    SHOW_DEBUG_BOXES || foundCharacters.includes(character.id)
-                )
-                .map((character) => (
-                  <div
-                    key={character.id}
-                    className={styles.debugBox}
-                    style={{
-                      left: `${(character.x / IMAGE_WIDTH) * 100}%`,
-                      top: `${(character.y / IMAGE_HEIGHT) * 100}%`,
-                      width: `${(character.width / IMAGE_WIDTH) * 100}%`,
-                      height: `${(character.height / IMAGE_HEIGHT) * 100}%`,
-                    }}
-                  />
-                ))}
             </div>
           </div>
         </div>
