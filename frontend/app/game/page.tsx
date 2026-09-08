@@ -24,6 +24,7 @@ type ClickPosition = {
 export default function GamePage() {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [foundCharacters, setFoundCharacters] = useState<number[]>([]);
+  const [seconds, setSeconds] = useState(0);
   const [selectedPosition, setSelectedPosition] = useState<ClickPosition | null>(
     null
   );
@@ -114,6 +115,20 @@ export default function GamePage() {
       });
   }, []);
 
+  useEffect(() => {
+    if (gameFinished) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setSeconds((current) => current + 1);
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [gameFinished]);
+
   return (
     <main
       style={{
@@ -182,6 +197,16 @@ export default function GamePage() {
               }}
             >
               Found {foundCharacters.length} / {characters.length}
+            </p>
+            <p
+              style={{
+                color: "#5d645f",
+                fontSize: "0.86rem",
+                fontWeight: 700,
+                margin: "4px 0 0",
+              }}
+            >
+              Time: {seconds}s
             </p>
             </div>
             <p
