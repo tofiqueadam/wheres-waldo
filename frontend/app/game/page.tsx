@@ -4,6 +4,7 @@ import { useEffect, useState, type MouseEvent } from "react";
 
 const IMAGE_WIDTH = 1200;
 const IMAGE_HEIGHT = 800;
+const SHOW_DEBUG_BOXES = process.env.NODE_ENV !== "production";
 
 type Character = {
   id: number;
@@ -303,7 +304,10 @@ export default function GamePage() {
             )}
 
             {characters
-              .filter((character) => foundCharacters.includes(character.id))
+              .filter(
+                (character) =>
+                  SHOW_DEBUG_BOXES || foundCharacters.includes(character.id)
+              )
               .map((character) => (
               <div
                 key={character.id}
