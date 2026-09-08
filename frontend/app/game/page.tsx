@@ -16,6 +16,12 @@ type Character = {
   image_id: number;
 };
 
+type Score = {
+  id: number;
+  player_name: string;
+  time_seconds: number;
+};
+
 type ClickPosition = {
   x: number;
   y: number;
@@ -25,6 +31,7 @@ export default function GamePage() {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [foundCharacters, setFoundCharacters] = useState<number[]>([]);
   const [seconds, setSeconds] = useState(0);
+  const [scores, setScores] = useState<Score[]>([]);
   const [playerName, setPlayerName] = useState("");
   const [scoreSaved, setScoreSaved] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<ClickPosition | null>(
@@ -124,6 +131,11 @@ export default function GamePage() {
         time_seconds: seconds,
       }),
     });
+
+    const response = await fetch("http://127.0.0.1:8000/api/scores/");
+    const data = await response.json();
+
+    setScores(data);
   }
 
   useEffect(() => {
@@ -131,6 +143,14 @@ export default function GamePage() {
       .then((response) => response.json())
       .then((data) => {
         setCharacters(data);
+      });
+  }, []);
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/api/scores/")
+      .then((response) => response.json())
+      .then((data) => {
+        setScores(data);
       });
   }, []);
 
@@ -402,6 +422,7 @@ export default function GamePage() {
             display: "flex",
             flexDirection: "column",
             minWidth: 0,
+            overflowY: "auto",
             padding: "clamp(20px, 3vw, 42px)",
           }}
         >
@@ -521,6 +542,63 @@ export default function GamePage() {
               ))}
             </div>
           </div>
+
+          <section
+            style={{
+              borderTop: "1px solid #4b514c",
+              marginTop: "clamp(20px, 3vh, 32px)",
+              paddingTop: "18px",
+            }}
+          >
+            <p
+              style={{
+                color: "#e85145",
+                fontSize: "0.72rem",
+                fontWeight: 800,
+                letterSpacing: "0.14em",
+                margin: "0 0 12px",
+                textTransform: "uppercase",
+              }}
+            >
+              Leaderboard
+            </p>
+            {scores.length === 0 ? (
+              <p
+                style={{
+                  color: "#c8c5b9",
+                  fontSize: "0.82rem",
+                  margin: 0,
+                }}
+              >
+                No completed runs yet.
+              </p>
+            ) : (
+              <div style={{ display: "grid", gap: "8px" }}>
+                {scores.map((score, index) => (
+                  <div
+                    key={score.id}
+                    style={{
+                      alignItems: "center",
+                      display: "flex",
+                      fontSize: "0.85rem",
+                      gap: "10px",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <span>
+                      <strong style={{ color: "#e85145" }}>
+                        {index + 1}.
+                      </strong>{" "}
+                      {score.player_name}
+                    </span>
+                    <span style={{ color: "#c8c5b9", whiteSpace: "nowrap" }}>
+                      {score.time_seconds}s
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </aside>
       </section>
     </main>
