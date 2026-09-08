@@ -54,6 +54,16 @@ export default function GamePage() {
     );
   }
 
+  function resetGame() {
+    setGameStarted(false);
+    setSeconds(0);
+    setFoundCharacters([]);
+    setSelectedPosition(null);
+    setMenuPosition({ x: 0, y: 0 });
+    setZoomLevel(1);
+    setFeedback(null);
+  }
+
   function handleImageClick(event: MouseEvent<HTMLImageElement>) {
     const viewport = viewportRef.current;
 
@@ -396,7 +406,17 @@ export default function GamePage() {
               {feedback?.message ?? "Waiting for your first find."}
             </p>
             {gameFinished && (
-              <p className={styles.completion}>You found everyone!</p>
+              <div className={styles.completion}>
+                <p>You found everyone!</p>
+                <p>Your time: {seconds} seconds</p>
+                <button
+                  type="button"
+                  className={styles.playAgainButton}
+                  onClick={resetGame}
+                >
+                  Play again <span aria-hidden="true">-&gt;</span>
+                </button>
+              </div>
             )}
           </div>
 
