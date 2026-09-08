@@ -261,6 +261,42 @@
   font-weight: 800;
 }
 
+.completion p {
+  margin: 0 0 6px;
+}
+
+.completion p:nth-child(2) {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.playAgainButton {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--success);
+  color: var(--ink);
+  background: var(--success);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.playAgainButton:hover,
+.playAgainButton:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 3px;
+  background: #b8e6c4;
+}
+
 .leaderboardList {
   display: grid;
   gap: 8px;
