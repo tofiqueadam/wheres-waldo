@@ -87,24 +87,40 @@ export default function GamePage() {
   return (
     <main
       style={{
-        minHeight: "100vh",
+        height: "100vh",
         background: "#f4efe5",
         color: "#202522",
-        padding: "clamp(24px, 5vw, 64px) 16px",
+        overflow: "hidden",
+        padding: "clamp(14px, 2.5vw, 32px)",
       }}
     >
-      <section style={{ maxWidth: "1240px", margin: "0 auto" }}>
-        <header
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 2fr) minmax(260px, 1fr)",
+          gap: "clamp(16px, 2.5vw, 36px)",
+          height: "100%",
+          margin: "0 auto",
+          maxWidth: "1600px",
+        }}
+      >
+        <div
           style={{
             display: "flex",
-            alignItems: "end",
-            justifyContent: "space-between",
-            gap: "24px",
-            marginBottom: "20px",
-            flexWrap: "wrap",
+            flexDirection: "column",
+            minWidth: 0,
           }}
         >
-          <div>
+          <header
+            style={{
+              alignItems: "end",
+              display: "flex",
+              gap: "20px",
+              justifyContent: "space-between",
+              marginBottom: "clamp(12px, 2vh, 22px)",
+            }}
+          >
+            <div>
             <p
               style={{
                 color: "#bf3f35",
@@ -127,40 +143,45 @@ export default function GamePage() {
             >
               Where&apos;s Waldo?
             </h1>
-          </div>
-          <p
-            style={{
-              background: "#202522",
-              color: "#f4efe5",
-              fontSize: "0.78rem",
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              margin: 0,
-              padding: "10px 14px",
-              textTransform: "uppercase",
-            }}
-          >
-            {characters.length} targets in frame
-          </p>
-        </header>
+            </div>
+            <p
+              style={{
+                background: "#202522",
+                color: "#f4efe5",
+                fontSize: "0.72rem",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                margin: 0,
+                padding: "9px 12px",
+                textTransform: "uppercase",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {characters.length} targets
+            </p>
+          </header>
 
-        <div
-          style={{
-            background: "#202522",
-            border: "1px solid #202522",
-            boxShadow: "12px 12px 0 #d7cdbd",
-            padding: "clamp(8px, 1.5vw, 16px)",
-          }}
-        >
           <div
             style={{
-              position: "relative",
-              width: "100%",
-              maxWidth: "1200px",
-              margin: "0 auto",
-              overflow: "hidden",
+              alignItems: "center",
+              background: "#202522",
+              border: "1px solid #202522",
+              boxShadow: "12px 12px 0 #d7cdbd",
+              display: "flex",
+              flex: 1,
+              minHeight: 0,
+              padding: "clamp(8px, 1.5vw, 16px)",
             }}
           >
+            <div
+              style={{
+              position: "relative",
+              aspectRatio: "3 / 2",
+              width: "100%",
+              margin: "0 auto",
+              overflow: "hidden",
+              }}
+            >
             <img
               src="/images/waldo-city.jpg"
               alt="Where's Waldo game"
@@ -243,23 +264,126 @@ export default function GamePage() {
                 }}
               />
             ))}
+            </div>
           </div>
         </div>
 
-        {feedback && (
+        <aside
+          style={{
+            background: "#202522",
+            boxShadow: "12px 12px 0 #d7cdbd",
+            color: "#fffaf0",
+            display: "flex",
+            flexDirection: "column",
+            minWidth: 0,
+            padding: "clamp(20px, 3vw, 42px)",
+          }}
+        >
           <p
             style={{
-              background: feedback.correct ? "#d8eadb" : "#f5d7d1",
-              borderLeft: `5px solid ${feedback.correct ? "#2c7a4b" : "#bf3f35"}`,
-              color: "#202522",
-              fontWeight: 700,
-              margin: "24px 0 0",
-              padding: "14px 16px",
+              color: "#e85145",
+              fontSize: "0.72rem",
+              fontWeight: 800,
+              letterSpacing: "0.16em",
+              margin: 0,
+              textTransform: "uppercase",
             }}
           >
-            {feedback.message}
+            Mission status
           </p>
-        )}
+          <h2
+            style={{
+              fontSize: "clamp(1.8rem, 3vw, 3rem)",
+              letterSpacing: "0",
+              lineHeight: 1,
+              margin: "12px 0 14px",
+            }}
+          >
+            Find the hidden crew.
+          </h2>
+          <p
+            style={{
+              color: "#c8c5b9",
+              fontSize: "0.95rem",
+              lineHeight: 1.55,
+              margin: 0,
+              maxWidth: "32ch",
+            }}
+          >
+            Click the picture, then choose the name that matches your find.
+          </p>
+
+          <div
+            style={{
+              borderBottom: "1px solid #4b514c",
+              borderTop: "1px solid #4b514c",
+              margin: "clamp(24px, 5vh, 56px) 0 0",
+              padding: "18px 0",
+            }}
+          >
+            <p
+              style={{
+                color: "#c8c5b9",
+                fontSize: "0.68rem",
+                fontWeight: 800,
+                letterSpacing: "0.14em",
+                margin: "0 0 10px",
+                textTransform: "uppercase",
+              }}
+            >
+              Latest result
+            </p>
+            <p
+              style={{
+                color: feedback
+                  ? feedback.correct
+                    ? "#91d5a6"
+                    : "#ff9b8f"
+                  : "#fffaf0",
+                fontSize: "clamp(1.2rem, 2vw, 1.8rem)",
+                fontWeight: 800,
+                lineHeight: 1.15,
+                margin: 0,
+              }}
+            >
+              {feedback?.message ?? "Waiting for your first find."}
+            </p>
+          </div>
+
+          <div style={{ marginTop: "auto" }}>
+            <p
+              style={{
+                color: "#c8c5b9",
+                fontSize: "0.68rem",
+                fontWeight: 800,
+                letterSpacing: "0.14em",
+                margin: "0 0 12px",
+                textTransform: "uppercase",
+              }}
+            >
+              Targets in this frame
+            </p>
+            <div style={{ display: "grid", gap: "8px" }}>
+              {characters.map((character, index) => (
+                <div
+                  key={character.id}
+                  style={{
+                    alignItems: "center",
+                    borderBottom: "1px solid #4b514c",
+                    display: "flex",
+                    gap: "10px",
+                    padding: "8px 0",
+                  }}
+                >
+                  <span style={{ color: "#e85145", fontWeight: 800 }}>
+                    0{index + 1}
+                  </span>
+                  <span style={{ fontWeight: 700 }}>{character.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
       </section>
     </main>
   );
