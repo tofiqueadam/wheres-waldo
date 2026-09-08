@@ -34,8 +34,8 @@ export default function GamePage() {
   const [seconds, setSeconds] = useState(0);
   const [scores, setScores] = useState<Score[]>([]);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [gameStarted, setGameStarted] = useState(false);
   const [playerName, setPlayerName] = useState("");
-  const [scoreSaved, setScoreSaved] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<ClickPosition | null>(
     null
   );
@@ -175,7 +175,7 @@ export default function GamePage() {
   }, []);
 
   useEffect(() => {
-    if (gameFinished) {
+    if (!gameStarted || gameFinished) {
       return;
     }
 
@@ -186,21 +186,7 @@ export default function GamePage() {
     return () => {
       clearInterval(interval);
     };
-  }, [gameFinished]);
-
-  useEffect(() => {
-    if (!gameFinished || scoreSaved) {
-      return;
-    }
-
-    const name = window.prompt("You found everyone! Enter your name:");
-
-    if (name && name.trim()) {
-      setPlayerName(name);
-    }
-
-    setScoreSaved(true);
-  }, [gameFinished, scoreSaved]);
+  }, [gameStarted, gameFinished]);
 
   useEffect(() => {
     if (!gameFinished || !playerName) {
@@ -209,6 +195,49 @@ export default function GamePage() {
 
     saveScore();
   }, [gameFinished, playerName]);
+
+  if (!gameStarted) {
+    return (
+      <main className={styles.startPage}>
+        <div className={styles.startBackdrop} aria-hidden="true" />
+        <section className={styles.startCard}>
+          <p className={styles.startEyebrow}>A field search challenge</p>
+          <h1 className={styles.startTitle}>Where&apos;s Waldo?</h1>
+          <p className={styles.startCopy}>
+            Find every hidden character before the clock catches you. Zoom in,
+            inspect the scene, and trust your eyes.
+          </p>
+          <label className={styles.nameLabel} htmlFor="player-name">
+            Your name
+          </label>
+          <input
+            id="player-name"
+            className={styles.nameInput}
+            type="text"
+            placeholder="Enter your name"
+            value={playerName}
+            onChange={(event) => setPlayerName(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && playerName.trim()) {
+                setGameStarted(true);
+              }
+            }}
+            autoComplete="name"
+            autoFocus
+          />
+          <button
+            type="button"
+            className={styles.startButton}
+            onClick={() => setGameStarted(true)}
+            disabled={!playerName.trim()}
+          >
+            Start game <span aria-hidden="true">-&gt;</span>
+          </button>
+          <p className={styles.startNote}>The clock starts when you enter.</p>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className={styles.gamePage}>
