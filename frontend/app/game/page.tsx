@@ -574,23 +574,31 @@ export default function GamePage() {
           </div>
 
           <section className={styles.leaderboard}>
-            <p className={styles.leaderboardLabel}>Leaderboard</p>
+            <div className={styles.leaderboardHeader}>
+              <h2 className={styles.leaderboardTitle}>Leaderboard</h2>
+              <span className={styles.leaderboardBadge}>Fastest first</span>
+            </div>
             {scores.length === 0 ? (
-              <p className={styles.panelCopy}>No completed runs yet.</p>
+              <p className={styles.emptyScores}>No scores yet. Be the first!</p>
             ) : (
-              <div className={styles.leaderboardList}>
+              <ol className={styles.leaderboardList}>
                 {scores.map((score, index) => (
-                  <div key={score.id} className={styles.scoreItem}>
-                    <span>
-                      <strong className={styles.scoreRank}>{index + 1}.</strong>{" "}
-                      {score.player_name}
+                  <li
+                    key={score.id}
+                    className={`${styles.scoreItem} ${
+                      index < 3 ? styles.scoreTop : ""
+                    }`}
+                  >
+                    <span className={styles.scoreIdentity}>
+                      <strong className={styles.scoreRank}>{index + 1}</strong>
+                      <span>{score.player_name}</span>
                     </span>
-                    <span className={styles.scoreTime}>
+                    <strong className={styles.scoreTime}>
                       {score.time_seconds}s
-                    </span>
-                  </div>
+                    </strong>
+                  </li>
                 ))}
-              </div>
+              </ol>
             )}
           </section>
         </aside>

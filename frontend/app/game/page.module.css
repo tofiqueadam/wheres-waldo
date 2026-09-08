@@ -11,17 +11,20 @@
   color: var(--ink);
   background:
     radial-gradient(circle at 12% 12%, rgba(232, 81, 69, 0.08), transparent 22rem),
-    linear-gradient(135deg, #f8f4ec 0%, var(--paper) 55%, #e7dfd1 100%);
-}
-
-.shell {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+    margin: 0 0 10px;
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
   gap: clamp(16px, 2.5vw, 36px);
   height: calc(100vh - clamp(28px, 5vw, 64px));
   max-width: 1600px;
   margin: 0 auto;
-}
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    gap: 6px;
 
 .stageColumn {
   display: flex;
@@ -29,25 +32,84 @@
   flex-direction: column;
 }
 
-.header {
-  display: flex;
+    padding: 10px 10px 10px 8px;
+    border: 1px solid transparent;
+    border-bottom-color: var(--line);
   align-items: flex-end;
   justify-content: space-between;
   gap: 20px;
+  .scoreIdentity {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: 10px;
+  }
+
   margin-bottom: clamp(12px, 2vh, 22px);
+    color: var(--signal);
 }
 
 .eyebrow,
 .panelEyebrow {
-  margin: 0 0 8px;
+    color: var(--paper);
+    font-size: 0.9rem;
   color: #bf3f35;
   font-size: 0.72rem;
+
+  .scoreTop {
+    border-color: rgba(232, 81, 69, 0.2);
+    background: rgba(232, 81, 69, 0.08);
+  }
+
+  .scoreTop:first-child .scoreRank {
+    color: #ffcf70;
+  }
+
+  .scoreTop:nth-child(2) .scoreRank {
+    color: #d7d8d1;
+  }
+
+  .scoreTop:nth-child(3) .scoreRank {
+    color: #d79869;
+  }
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
 .title {
+
+  .leaderboardHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .leaderboardTitle {
+    margin: 0;
+    color: var(--paper);
+    font-size: 1.05rem;
+    letter-spacing: 0;
+  }
+
+  .leaderboardBadge {
+    padding: 5px 7px;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .emptyScores {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
   margin: 0;
   font-size: clamp(2rem, 5vw, 4.25rem);
   letter-spacing: 0;
@@ -235,8 +297,7 @@
   border-bottom: 1px solid var(--line);
 }
 
-.resultLabel,
-.leaderboardLabel {
+.resultLabel {
   margin: 0 0 10px;
   color: var(--muted);
   font-size: 0.68rem;
