@@ -48,32 +48,50 @@ export default function GamePage() {
     setFeedback(null);
   }
 
-  function handleCharacterSelection(character: Character) {
+  async function handleCharacterSelection(character: Character) {
     if (!selectedPosition) {
       return;
     }
 
-    const insideX =
-      selectedPosition.x >= character.x &&
-      selectedPosition.x <= character.x + character.width;
-
-    const insideY =
-      selectedPosition.y >= character.y &&
-      selectedPosition.y <= character.y + character.height;
-
-    if (insideX && insideY) {
-      setFeedback({
-        message: `Correct! You found ${character.name}`,
-        correct: true,
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/game/guess", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          character_id: character.id,
+          x: selectedPosition.x,
+          y: selectedPosition.y,
+        }),
       });
-    } else {
+
+      if (!response.ok) {
+        throw new Error("Guess request failed");
+      }
+
+      const result: { correct: boolean; character?: string } =
+        await response.json();
+
+      if (result.correct) {
+        setFeedback({
+          message: `Correct! You found ${result.character ?? character.name}`,
+          correct: true,
+        });
+      } else {
+        setFeedback({
+          message: "Not this one. Keep looking.",
+          correct: false,
+        });
+      }
+    } catch {
       setFeedback({
-        message: "Not this one. Keep looking.",
+        message: "Could not check your guess. Try again.",
         correct: false,
       });
+    } finally {
+      setSelectedPosition(null);
     }
-
-    setSelectedPosition(null);
   }
 
   useEffect(() => {
